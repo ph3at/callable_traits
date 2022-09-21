@@ -57,6 +57,15 @@ class MemberSpecifier:
     reference: Optional[Reference]
     specifier: Optional[Specifier]
 
+    def __bool__(self) -> bool:
+        return bool(self.qualifier) or bool(self.reference) or bool(self.specifier)
+
+    def __str__(self) -> str:
+        formatted = f' {self.qualifier.value}' if self.qualifier else ''
+        formatted += f' {self.reference.value}' if self.reference else ''
+        formatted += f' {self.specifier.value}' if self.specifier else ''
+        return formatted
+
 
 @dataclass
 class FullType:
@@ -89,6 +98,19 @@ class Function:
         params += '...' if self.is_variadic else ''
         formatted += f'({params})'
         formatted += f' {str(self.specifier.value)}' if self.specifier else ''
+        return formatted
+
+
+@dataclass
+class MemberFunction(Function):
+    member_specifier: MemberSpecifier
+    class_type: str
+
+    def __str__(self) -> str:
+        formatted = f'struct {self.class_type} {{'
+        formatted += f' {super().__str__()}'
+        formatted += f'{str(self.member_specifier)};' if self.member_specifier else ';'
+        formatted += f' }};'
         return formatted
 
 
@@ -148,6 +170,18 @@ def gen_functions(return_types: list[FullType], parameters: list[list[FullType]]
             for is_variadic in [False, True]:
                 functions += [Function(return_type,
                                        f'fn_{counter}', parameter, is_variadic, specifier)]
+                counter += 1
+    return functions
+
+
+def gen_member_functions(return_types: list[FullType], parameters: list[list[FullType]], member_specifiers: list[MemberSpecifier]) -> list[MemberFunction]:
+    counter = 0
+    functions = []
+    for return_type, parameter in zip(cycle(return_types), parameters):
+        for specifier in member_specifiers:
+            for is_variadic in [False, True]:
+                functions += [MemberFunction(
+                    return_type, 'mem_fn', parameter, is_variadic, None, specifier, f'class_{counter}')]
                 counter += 1
     return functions
 
@@ -218,9 +252,16 @@ all_parameter_types = [t for t in all_full_types if is_valid_parameter_type(t)]
 all_parameters = list(chain.from_iterable(
     [gen_function_parameters(p, all_parameter_types) for p in range(0, 5)]))
 all_specifiers = [None, Specifier.NOEXCEPT]
+all_member_specifiers = [MemberSpecifier(q, r, s)
+                         for s in all_specifiers
+                         for r in all_references
+                         for q in all_qualifiers]
 
 functions = gen_functions(all_return_types, all_parameters, all_specifiers)
 function_tests = gen_function_tests(functions)
+
+member_functions = gen_member_functions(
+    all_return_types, all_parameters, all_member_specifiers)
 
 source = '/* This file was auto-generated */\n\n'
 source = append_headers(source, headers)
