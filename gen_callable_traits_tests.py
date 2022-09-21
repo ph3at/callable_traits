@@ -165,24 +165,20 @@ def is_valid_parameter_type(full_type: FullType) -> bool:
 def gen_functions(return_types: list[FullType], parameters: list[list[FullType]], specifiers: list[Optional[Specifier]]) -> list[Function]:
     counter = 0
     functions = []
-    for return_type, parameter in zip(cycle(return_types), parameters):
-        for specifier in specifiers:
-            for is_variadic in [False, True]:
-                functions += [Function(return_type,
-                                       f'fn_{counter}', parameter, is_variadic, specifier)]
-                counter += 1
+    for return_type, parameter, is_variadic, specifier in zip(cycle(return_types), parameters, cycle([False, True]), cycle(specifiers)):
+        functions += [Function(return_type,
+                               f'fn_{counter}', parameter, is_variadic, specifier)]
+        counter += 1
     return functions
 
 
 def gen_member_functions(return_types: list[FullType], parameters: list[list[FullType]], member_specifiers: list[MemberSpecifier]) -> list[MemberFunction]:
     counter = 0
     functions = []
-    for return_type, parameter in zip(cycle(return_types), parameters):
-        for specifier in member_specifiers:
-            for is_variadic in [False, True]:
-                functions += [MemberFunction(
-                    return_type, 'mem_fn', parameter, is_variadic, None, specifier, f'class_{counter}')]
-                counter += 1
+    for return_type, parameter, is_variadic, specifier in zip(cycle(return_types), parameters, cycle([False, True]), cycle(member_specifiers)):
+        functions += [MemberFunction(return_type, 'mem_fn', parameter,
+                                     is_variadic, None, specifier, f'class_{counter}')]
+        counter += 1
     return functions
 
 
