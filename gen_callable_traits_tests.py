@@ -12,7 +12,7 @@ class Header:
     name: str
     system: bool
 
-    def __str__(self):
+    def __str__(self) -> str:
         opening_symbol = '<' if self.system else '"'
         closing_symbol = '>' if self.system else '"'
         return f'#include {opening_symbol}{self.name}{closing_symbol}'
@@ -36,7 +36,7 @@ class Type(Enum):
 class Pointer:
     qualifier: Optional[Qualifier]
 
-    def __str__(self):
+    def __str__(self) -> str:
         formatted = '*'
         formatted += f' {self.qualifier.value}' if self.qualifier else ''
         return formatted
@@ -65,7 +65,7 @@ class FullType:
     pointer: Optional[Pointer]
     reference: Optional[Reference]
 
-    def __str__(self):
+    def __str__(self) -> str:
         formatted = f'{self.qualifier.value}' if self.qualifier else ''
         formatted += ' ' if formatted else ''
         formatted += f'{str(self.type_value.value)}'
@@ -82,7 +82,7 @@ class Function:
     is_variadic: bool
     specifier: Optional[Specifier]
 
-    def __str__(self):
+    def __str__(self) -> str:
         formatted = f'{str(self.return_type)} {self.name}'
         params = ', '.join(str(p) for p in self.parameters)
         params += ', ' if params and self.is_variadic else ''
@@ -96,31 +96,31 @@ class Function:
 class StaticAssert:
     condition: str
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f'static_assert({self.condition});'
 
 
-def is_pointer_type(full_type: FullType):
+def is_pointer_type(full_type: FullType) -> bool:
     return True if full_type.pointer else False
 
 
-def is_reference_type(full_type: FullType):
+def is_reference_type(full_type: FullType) -> bool:
     return True if full_type.reference else False
 
 
-def is_value_type(full_type: FullType):
+def is_value_type(full_type: FullType) -> bool:
     return not (is_pointer_type(full_type) or is_reference_type(full_type))
 
 
-def is_cv_qualified(t: Union[FullType, Pointer]):
+def is_cv_qualified(t: Union[FullType, Pointer]) -> bool:
     return True if t.qualifier else False
 
 
-def is_void_type(full_type: FullType):
+def is_void_type(full_type: FullType) -> bool:
     return full_type.type_value == Type.VOID
 
 
-def is_cv_qualified_value_or_pointer(full_type: FullType):
+def is_cv_qualified_value_or_pointer(full_type: FullType) -> bool:
     is_cv_qualified_value = is_value_type(
         full_type) and is_cv_qualified(full_type)
     is_cv_qualified_pointer = is_pointer_type(full_type) and is_cv_qualified(
@@ -128,19 +128,19 @@ def is_cv_qualified_value_or_pointer(full_type: FullType):
     return is_cv_qualified_value or is_cv_qualified_pointer
 
 
-def is_valid_return_type(full_type: FullType):
+def is_valid_return_type(full_type: FullType) -> bool:
     is_void_reference = is_void_type(full_type) and is_reference_type(
         full_type) and not is_pointer_type(full_type)
     return not (is_cv_qualified_value_or_pointer(full_type) or is_void_reference)
 
 
-def is_valid_parameter_type(full_type: FullType):
+def is_valid_parameter_type(full_type: FullType) -> bool:
     is_void_value_or_reference = is_void_type(full_type) and (
         is_value_type(full_type) or (is_reference_type(full_type) and not is_pointer_type(full_type)))
     return not (is_void_value_or_reference or is_cv_qualified_value_or_pointer(full_type))
 
 
-def gen_functions(return_types: list[FullType], parameters: list[list[FullType]], specifiers: list[Optional[Specifier]]):
+def gen_functions(return_types: list[FullType], parameters: list[list[FullType]], specifiers: list[Optional[Specifier]]) -> list[Function]:
     counter = 0
     functions = []
     for return_type, parameter in zip(cycle(return_types), parameters):
@@ -184,12 +184,12 @@ def gen_function_parameters(num_parameters: int, parameters: list[FullType]) -> 
     return [parameters[i:i + num_parameters] for i in range(0, len(parameters), num_parameters)]
 
 
-def append_headers(source: str, headers: list[Header]):
+def append_headers(source: str, headers: list[Header]) -> str:
     source += '\n'.join(str(h) for h in headers)
     return source + '\n'
 
 
-def append_function_tests(source: str, functions: list[Function], assertions: list[list[StaticAssert]]):
+def append_function_tests(source: str, functions: list[Function], assertions: list[list[StaticAssert]]) -> str:
     for fn, tests in zip(functions, assertions):
         source += f'{fn};\n'
         source += '\n'.join(str(t) for t in tests) + '\n'
