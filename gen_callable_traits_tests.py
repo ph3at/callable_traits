@@ -193,7 +193,11 @@ def append_function_tests(source: str, functions: list[Function], assertions: li
     for fn, tests in zip(functions, assertions):
         source += f'{fn};\n'
         source += '\n'.join(str(t) for t in tests) + '\n'
-    return source + '\n'
+    return source
+
+
+def append_main(source: str) -> str:
+    return source + 'int main() { return 0; }\n'
 
 
 headers = [Header(h, True) for h in ['functional', 'string', 'type_traits']]
@@ -221,5 +225,6 @@ function_tests = gen_function_tests(functions)
 source = '/* This file was auto-generated */\n\n'
 source = append_headers(source, headers)
 source = append_function_tests(source, functions, function_tests)
+source = append_main(source)
 
 print(source)
