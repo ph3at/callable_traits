@@ -165,10 +165,15 @@ def gen_function_tests(functions: list[Function]) -> list[list[StaticAssert]]:
                     f'std::is_same_v<{traits}::arg{idx}_type, {str(parameter)}>')]
             fn_tests += [StaticAssert(
                 f'std::is_same_v<{traits}::arg_type<{idx}>, {str(parameter)}>')]
+        for idx in range(0, 3):
+            fn_tests += [StaticAssert(
+                f'helper::has_arg{idx}_type_v<{traits}> == {"true" if len(fn.parameters) > idx else "false"}')]
         fn_tests += [StaticAssert(f'{traits}::arity == {len(fn.parameters)}')]
         fn_tests += [StaticAssert(f'{traits}::is_member_function == false')]
         fn_tests += [StaticAssert(
             f'{traits}::is_variadic_function == {"true" if fn.is_variadic else "false"}')]
+        fn_tests += [StaticAssert(
+            f'helper::has_class_type_v<{traits}> == false')]
         tests += [fn_tests]
     return tests
 
@@ -192,7 +197,8 @@ def append_function_tests(source: str, functions: list[Function], assertions: li
 
 
 headers = [Header(h, True) for h in ['functional', 'string', 'type_traits']]
-headers += [Header('include/callable_traits.hpp', False)]
+headers += [Header(h, False) for h in ['include/callable_traits.hpp',
+                                       'test/callable_traits_test_helper.hpp']]
 
 all_qualifiers = [None] + [q for q in Qualifier]
 all_types = [t for t in Type]
