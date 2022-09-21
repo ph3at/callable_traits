@@ -212,6 +212,34 @@ def gen_function_tests(functions: list[Function]) -> list[list[StaticAssert]]:
     return tests
 
 
+def gen_member_function_tests(functions: list[MemberFunction]) -> list[list[StaticAssert]]:
+    tests = []
+    for fn in functions:
+        traits = f'callable_traits<decltype(&{fn.class_type}::mem_fn)>'
+        fn_tests = []
+        fn_tests += [StaticAssert(
+            f'std::is_same_v<{traits}::result_type, {str(fn.return_type)}>')]
+        for idx in range(0, 4):
+            fn_tests += [StaticAssert(
+                f'helper::has_arg{idx}_type_v<{traits}> == {"true" if len(fn.parameters) > idx and idx < 3 else "false"}')]
+        for idx, parameter in enumerate(fn.parameters):
+            if idx < 3:
+                fn_tests += [StaticAssert(
+                    f'std::is_same_v<{traits}::arg{idx}_type, {str(parameter)}>')]
+            fn_tests += [StaticAssert(
+                f'std::is_same_v<{traits}::arg_type<{idx}>, {str(parameter)}>')]
+        fn_tests += [StaticAssert(f'{traits}::arity == {len(fn.parameters)}')]
+        fn_tests += [StaticAssert(f'{traits}::is_member_function == true')]
+        fn_tests += [StaticAssert(
+            f'{traits}::is_variadic_function == {"true" if fn.is_variadic else "false"}')]
+        fn_tests += [StaticAssert(
+            f'helper::has_class_type_v<{traits}> == true')]
+        fn_tests += [StaticAssert(
+            f'std::is_same_v<{traits}::class_type, {fn.class_type}>')]
+        tests += [fn_tests]
+    return tests
+
+
 def gen_function_parameters(num_parameters: int, parameters: list[FullType]) -> list[list[FullType]]:
     if num_parameters == 0:
         return [[]]
@@ -226,6 +254,13 @@ def append_headers(source: str, headers: list[Header]) -> str:
 def append_function_tests(source: str, functions: list[Function], assertions: list[list[StaticAssert]]) -> str:
     for fn, tests in zip(functions, assertions):
         source += f'{fn};\n'
+        source += '\n'.join(str(t) for t in tests) + '\n'
+    return source
+
+
+def append_member_function_tests(source: str, functions: list[MemberFunction], assertions: list[list[StaticAssert]]) -> str:
+    for fn, tests in zip(functions, assertions):
+        source += f'{fn}\n'
         source += '\n'.join(str(t) for t in tests) + '\n'
     return source
 
@@ -262,10 +297,13 @@ function_tests = gen_function_tests(functions)
 
 member_functions = gen_member_functions(
     all_return_types, all_parameters, all_member_specifiers)
+member_function_tests = gen_member_function_tests(member_functions)
 
 source = '/* This file was auto-generated */\n\n'
 source = append_headers(source, headers)
 source = append_function_tests(source, functions, function_tests)
+source = append_member_function_tests(
+    source, member_functions, member_function_tests)
 source = append_main(source)
 
 print(source)
