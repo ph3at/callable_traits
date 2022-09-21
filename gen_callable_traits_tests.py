@@ -159,15 +159,15 @@ def gen_function_tests(functions: list[Function]) -> list[list[StaticAssert]]:
         fn_tests = []
         fn_tests += [StaticAssert(
             f'std::is_same_v<{traits}::result_type, {str(fn.return_type)}>')]
+        for idx in range(0, 4):
+            fn_tests += [StaticAssert(
+                f'helper::has_arg{idx}_type_v<{traits}> == {"true" if len(fn.parameters) > idx and idx < 3 else "false"}')]
         for idx, parameter in enumerate(fn.parameters):
             if idx < 3:
                 fn_tests += [StaticAssert(
                     f'std::is_same_v<{traits}::arg{idx}_type, {str(parameter)}>')]
             fn_tests += [StaticAssert(
                 f'std::is_same_v<{traits}::arg_type<{idx}>, {str(parameter)}>')]
-        for idx in range(0, 3):
-            fn_tests += [StaticAssert(
-                f'helper::has_arg{idx}_type_v<{traits}> == {"true" if len(fn.parameters) > idx else "false"}')]
         fn_tests += [StaticAssert(f'{traits}::arity == {len(fn.parameters)}')]
         fn_tests += [StaticAssert(f'{traits}::is_member_function == false')]
         fn_tests += [StaticAssert(

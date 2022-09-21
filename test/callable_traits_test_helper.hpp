@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <type_traits>
 
 namespace helper {
@@ -24,6 +25,13 @@ template <typename T>
 struct has_arg2_type<T, std::void_t<typename T::arg2_type>> : std::true_type {};
 template <typename T>
 inline constexpr auto has_arg2_type_v = has_arg2_type<T>::value;
+
+template <typename T, typename = void>
+struct has_arg3_type : std::false_type {};
+template <typename T>
+struct has_arg3_type<T, std::void_t<typename T::arg3_type>> : std::true_type {};
+template <typename T>
+inline constexpr auto has_arg3_type_v = has_arg3_type<T>::value;
 
 template <typename T, typename = void>
 struct has_class_type : std::false_type {};
