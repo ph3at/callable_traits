@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-from asyncio import streams
 from dataclasses import dataclass
 from enum import Enum
 from itertools import cycle, chain
