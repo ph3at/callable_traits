@@ -121,6 +121,20 @@ class StaticAssert:
         return f'static_assert({self.condition});'
 
 
+@dataclass
+class FunctionType:
+    name: str
+    variable: Union[None, tuple[str, str]]
+    type_expression: Union[None, str]
+
+    def __str__(self) -> str:
+        formatted = f'{self.variable[0]} {self.name}_var = {self.variable[1]};' if self.variable else ''
+        formatted += f'using {self.name}_t = decltype('
+        formatted += f'{self.name}_var' if self.variable else f'{self.type_expression}'
+        formatted += ');'
+        return formatted
+
+
 def cyclic_zip(*iterables):
     longest = max(iterables, key=len)
     elements = (cycle(elem) if elem != longest else elem for elem in iterables)
