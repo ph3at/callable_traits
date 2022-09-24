@@ -109,7 +109,7 @@ class MemberFunction(Function):
         formatted = f'struct {self.class_type} {{'
         formatted += f' {super().__str__()}'
         formatted += f'{str(self.member_specifier)};' if self.member_specifier else ';'
-        formatted += f' }};'
+        formatted += f' }}'
         return formatted
 
 
@@ -252,16 +252,9 @@ def append_headers(source: str, headers: list[Header]) -> str:
     return source + '\n'
 
 
-def append_function_tests(source: str, functions: list[Function], assertions: list[list[StaticAssert]]) -> str:
+def append_tests(source: str, functions: Union[list[Function], list[MemberFunction]], assertions: list[list[StaticAssert]]) -> str:
     for fn, tests in zip(functions, assertions):
         source += f'{fn};\n'
-        source += '\n'.join(str(t) for t in tests) + '\n'
-    return source
-
-
-def append_member_function_tests(source: str, functions: list[MemberFunction], assertions: list[list[StaticAssert]]) -> str:
-    for fn, tests in zip(functions, assertions):
-        source += f'{fn}\n'
         source += '\n'.join(str(t) for t in tests) + '\n'
     return source
 
@@ -302,9 +295,8 @@ member_function_tests = gen_member_function_tests(member_functions)
 
 source = '/* This file was auto-generated */\n\n'
 source = append_headers(source, headers)
-source = append_function_tests(source, functions, function_tests)
-source = append_member_function_tests(
-    source, member_functions, member_function_tests)
+source = append_tests(source, functions, function_tests)
+source = append_tests(source, member_functions, member_function_tests)
 source = append_main(source)
 
 print(source)
