@@ -121,6 +121,12 @@ class StaticAssert:
         return f'static_assert({self.condition});'
 
 
+def cyclic_zip(*iterables):
+    longest = max(iterables, key=len)
+    elements = (cycle(elem) if elem != longest else elem for elem in iterables)
+    return zip(*elements)
+
+
 def is_pointer_type(full_type: FullType) -> bool:
     return True if full_type.pointer else False
 
@@ -164,7 +170,7 @@ def is_valid_parameter_type(full_type: FullType) -> bool:
 def gen_functions(return_types: list[FullType], parameters: list[list[FullType]], specifiers: list[Optional[Specifier]]) -> list[Function]:
     counter = 0
     functions = []
-    for return_type, parameter, is_variadic, specifier in zip(cycle(return_types), parameters, cycle([False, True]), cycle(specifiers)):
+    for return_type, parameter, is_variadic, specifier in cyclic_zip(return_types, parameters, [False, True], specifiers):
         functions += [Function(return_type,
                                f'fn_{counter}', parameter, is_variadic, specifier)]
         counter += 1
@@ -174,7 +180,7 @@ def gen_functions(return_types: list[FullType], parameters: list[list[FullType]]
 def gen_member_functions(return_types: list[FullType], parameters: list[list[FullType]], member_specifiers: list[MemberSpecifier]) -> list[MemberFunction]:
     counter = 0
     functions = []
-    for return_type, parameter, is_variadic, specifier in zip(cycle(return_types), parameters, cycle([False, True]), cycle(member_specifiers)):
+    for return_type, parameter, is_variadic, specifier in cyclic_zip(return_types, parameters, [False, True], member_specifiers):
         functions += [MemberFunction(return_type, 'mem_fn', parameter,
                                      is_variadic, None, specifier, f'class_{counter}')]
         counter += 1
@@ -265,8 +271,8 @@ def append_main(source: str) -> str:
 
 
 headers = [Header(h, True) for h in ['functional', 'string', 'type_traits']]
-headers += [Header(h, False) for h in ['include/callable_traits.hpp',
-                                       'test/callable_traits_test_helper.hpp']]
+headers += [Header(h, False) for h in ['../include/callable_traits.hpp',
+                                       'callable_traits_test_helper.hpp']]
 
 all_qualifiers = [None] + [q for q in Qualifier]
 all_types = [t for t in Type]
