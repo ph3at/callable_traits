@@ -50,6 +50,10 @@ class Specifier(Enum):
     NOEXCEPT = "noexcept"
 
 
+class Mutable(Enum):
+    MUTABLE = "mutable"
+
+
 @dataclass
 class MemberSpecifier:
     qualifier: Optional[Qualifier]
@@ -62,6 +66,17 @@ class MemberSpecifier:
     def __str__(self) -> str:
         formatted = f' {self.qualifier.value}' if self.qualifier else ''
         formatted += f' {self.reference.value}' if self.reference else ''
+        formatted += f' {self.specifier.value}' if self.specifier else ''
+        return formatted
+
+
+@dataclass
+class LambdaSpecifier:
+    mutable: Optional[Mutable]
+    specifier: Optional[Specifier]
+
+    def __str__(self) -> str:
+        formatted = f' {self.mutable.value}' if self.mutable else ''
         formatted += f' {self.specifier.value}' if self.specifier else ''
         return formatted
 
@@ -90,11 +105,15 @@ class Function:
     is_variadic: bool
     specifier: Optional[Specifier]
 
-    def __str__(self) -> str:
-        formatted = f'{str(self.return_type)} {self.name}'
+    def format_parameter_list(self) -> str:
         params = ', '.join(str(p) for p in self.parameters)
         params += ', ' if params and self.is_variadic else ''
         params += '...' if self.is_variadic else ''
+        return params
+
+    def __str__(self) -> str:
+        formatted = f'{str(self.return_type)} {self.name}'
+        params = self.format_parameter_list()
         formatted += f'({params})'
         formatted += f' {str(self.specifier.value)}' if self.specifier else ''
         return formatted
@@ -110,6 +129,20 @@ class MemberFunction(Function):
         formatted += f' {super().__str__()}'
         formatted += f'{str(self.member_specifier)};' if self.member_specifier else ';'
         formatted += f' }}'
+        return formatted
+
+
+@dataclass
+class LambdaFunction(Function):
+    lambda_specifier: LambdaSpecifier
+    lambda_name: str
+
+    def __str__(self) -> str:
+        formatted = f'[[maybe_unused]] const auto {self.lambda_name} = []'
+        formatted += f'({self.format_parameter_list()})'
+        formatted += f'{str(self.lambda_specifier)}'
+        formatted += f' -> {self.return_type}'
+        formatted += ' {}'
         return formatted
 
 
@@ -201,6 +234,16 @@ def gen_member_functions(return_types: list[FullType], parameters: list[list[Ful
     return functions
 
 
+def gen_lambda_functions(return_types: list[FullType], parameters: list[list[FullType]], lambda_specifiers: list[LambdaSpecifier]) -> list[LambdaFunction]:
+    counter = 0
+    functions = []
+    for return_type, parameter, is_variadic, specifier in zip(cycle(return_types), parameters, cycle([False, True]), cycle(lambda_specifiers)):
+        functions += [LambdaFunction(return_type, '', parameter,
+                                     is_variadic, None, specifier, f'lambda_{counter}')]
+        counter += 1
+    return functions
+
+
 def gen_function_tests(functions: list[Function]) -> list[list[StaticAssert]]:
     tests = []
     for fn in functions:
@@ -255,6 +298,34 @@ def gen_member_function_tests(functions: list[MemberFunction]) -> list[list[Stat
     return tests
 
 
+def gen_lambda_function_tests(functions: list[LambdaFunction]) -> list[list[StaticAssert]]:
+    tests = []
+    for fn in functions:
+        traits = f'callable_traits<decltype({fn.lambda_name})>'
+        fn_tests = []
+        fn_tests += [StaticAssert(
+            f'std::is_same_v<{traits}::result_type, {str(fn.return_type)}>')]
+        for idx in range(0, 4):
+            fn_tests += [StaticAssert(
+                f'helper::has_arg{idx}_type_v<{traits}> == {"true" if len(fn.parameters) > idx and idx < 3 else "false"}')]
+        for idx, parameter in enumerate(fn.parameters):
+            if idx < 3:
+                fn_tests += [StaticAssert(
+                    f'std::is_same_v<{traits}::arg{idx}_type, {str(parameter)}>')]
+            fn_tests += [StaticAssert(
+                f'std::is_same_v<{traits}::arg_type<{idx}>, {str(parameter)}>')]
+        fn_tests += [StaticAssert(f'{traits}::arity == {len(fn.parameters)}')]
+        fn_tests += [StaticAssert(f'{traits}::is_member_function == false')]
+        fn_tests += [StaticAssert(
+            f'{traits}::is_variadic_function == {"true" if fn.is_variadic else "false"}')]
+        fn_tests += [StaticAssert(
+            f'helper::has_class_type_v<{traits}> == true')]
+        fn_tests += [StaticAssert(
+            f'std::is_same_v<{traits}::class_type, std::remove_const_t<decltype({fn.lambda_name})>>')]
+        tests += [fn_tests]
+    return tests
+
+
 def gen_function_parameters(num_parameters: int, parameters: list[FullType]) -> list[list[FullType]]:
     if num_parameters == 0:
         return [[]]
@@ -266,7 +337,7 @@ def append_headers(source: str, headers: list[Header]) -> str:
     return source + '\n'
 
 
-def append_tests(source: str, functions: Union[list[Function], list[MemberFunction]], assertions: list[list[StaticAssert]]) -> str:
+def append_tests(source: str, functions: Union[list[Function], list[MemberFunction], list[LambdaFunction]], assertions: list[list[StaticAssert]]) -> str:
     for fn, tests in zip(functions, assertions):
         source += f'{fn};\n'
         source += '\n'.join(str(t) for t in tests) + '\n'
@@ -274,7 +345,7 @@ def append_tests(source: str, functions: Union[list[Function], list[MemberFuncti
 
 
 def append_main(source: str) -> str:
-    return source + 'int main() { return 0; }\n'
+    return source + 'int main() { return 0; }'
 
 
 headers = [Header(h, True) for h in ['functional', 'string', 'type_traits']]
@@ -285,6 +356,7 @@ all_qualifiers = [None] + [q for q in Qualifier]
 all_types = [t for t in Type]
 all_pointers = [None] + [Pointer(q) for q in all_qualifiers]
 all_references = [None] + [r for r in Reference]
+all_mutables = [None] + [m for m in Mutable]
 all_full_types = [FullType(q, t, p, r)
                   for t in all_types
                   for r in all_references
@@ -299,6 +371,9 @@ all_member_specifiers = [MemberSpecifier(q, r, s)
                          for s in all_specifiers
                          for r in all_references
                          for q in all_qualifiers]
+all_lambda_specifiers = [LambdaSpecifier(m, s)
+                         for s in all_specifiers
+                         for m in all_mutables]
 
 functions = gen_functions(all_return_types, all_parameters, all_specifiers)
 function_tests = gen_function_tests(functions)
@@ -307,10 +382,15 @@ member_functions = gen_member_functions(
     all_return_types, all_parameters, all_member_specifiers)
 member_function_tests = gen_member_function_tests(member_functions)
 
+lambda_functions = gen_lambda_functions(
+    all_return_types, all_parameters, all_lambda_specifiers)
+lambda_function_tests = gen_lambda_function_tests(lambda_functions)
+
 source = '/* This file was auto-generated */\n\n'
 source = append_headers(source, headers)
 source = append_tests(source, functions, function_tests)
 source = append_tests(source, member_functions, member_function_tests)
+source = append_tests(source, lambda_functions, lambda_function_tests)
 source = append_main(source)
 
 print(source)
