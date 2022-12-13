@@ -263,7 +263,7 @@ def gen_function_tests(functions: list[Function]) -> list[list[StaticAssert]]:
         fn_tests += [StaticAssert(f'{traits}::arity == {len(fn.parameters)}')]
         fn_tests += [StaticAssert(f'{traits}::is_member_function == false')]
         fn_tests += [StaticAssert(
-            f'{traits}::is_variadic_function == {"true" if fn.is_variadic else "false"}')]
+            f'{traits}::is_variadic == {"true" if fn.is_variadic else "false"}')]
         fn_tests += [StaticAssert(
             f'helper::has_class_type_v<{traits}> == false')]
         tests += [fn_tests]
@@ -289,7 +289,7 @@ def gen_member_function_tests(functions: list[MemberFunction]) -> list[list[Stat
         fn_tests += [StaticAssert(f'{traits}::arity == {len(fn.parameters)}')]
         fn_tests += [StaticAssert(f'{traits}::is_member_function == true')]
         fn_tests += [StaticAssert(
-            f'{traits}::is_variadic_function == {"true" if fn.is_variadic else "false"}')]
+            f'{traits}::is_variadic == {"true" if fn.is_variadic else "false"}')]
         fn_tests += [StaticAssert(
             f'helper::has_class_type_v<{traits}> == true')]
         fn_tests += [StaticAssert(
@@ -317,7 +317,7 @@ def gen_lambda_function_tests(functions: list[LambdaFunction]) -> list[list[Stat
         fn_tests += [StaticAssert(f'{traits}::arity == {len(fn.parameters)}')]
         fn_tests += [StaticAssert(f'{traits}::is_member_function == false')]
         fn_tests += [StaticAssert(
-            f'{traits}::is_variadic_function == {"true" if fn.is_variadic else "false"}')]
+            f'{traits}::is_variadic == {"true" if fn.is_variadic else "false"}')]
         fn_tests += [StaticAssert(
             f'helper::has_class_type_v<{traits}> == true')]
         fn_tests += [StaticAssert(

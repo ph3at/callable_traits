@@ -20,7 +20,7 @@ void signature()
 	static_assert(void_to_void_functor_traits::arity == 0);
 	static_assert(std::is_same_v<void_to_void_functor_traits::class_type, void_to_void_functor>);
 	static_assert(void_to_void_functor_traits::is_member_function == false);
-	static_assert(void_to_void_functor_traits::is_variadic_function == false);
+	static_assert(void_to_void_functor_traits::is_variadic == false);
 	struct int_to_int_functor {
 		int operator()(int) { return {}; }
 	};
@@ -31,7 +31,7 @@ void signature()
 	static_assert(std::is_same_v<int_to_int_functor_traits::arg_type<0>, int>);
 	static_assert(std::is_same_v<int_to_int_functor_traits::class_type, int_to_int_functor>);
 	static_assert(int_to_int_functor_traits::is_member_function == false);
-	static_assert(int_to_int_functor_traits::is_variadic_function == false);
+	static_assert(int_to_int_functor_traits::is_variadic == false);
 }
 
 void specifier()
@@ -44,7 +44,7 @@ void specifier()
 	static_assert(const_functor_traits::arity == 0);
 	static_assert(std::is_same_v<const_functor_traits::class_type, const_functor>);
 	static_assert(const_functor_traits::is_member_function == false);
-	static_assert(const_functor_traits::is_variadic_function == false);
+	static_assert(const_functor_traits::is_variadic == false);
 
 	struct noexcept_functor {
 		void operator()() noexcept {}
@@ -54,7 +54,7 @@ void specifier()
 	static_assert(noexcept_functor_traits::arity == 0);
 	static_assert(std::is_same_v<noexcept_functor_traits::class_type, noexcept_functor>);
 	static_assert(noexcept_functor_traits::is_member_function == false);
-	static_assert(noexcept_functor_traits::is_variadic_function == false);
+	static_assert(noexcept_functor_traits::is_variadic == false);
 }
 
 void reference()
@@ -69,7 +69,7 @@ void reference()
 		static_assert(functor_traits::arity == 0);
 		static_assert(std::is_same_v<typename functor_traits::class_type, functor>);
 		static_assert(functor_traits::is_member_function == false);
-		static_assert(functor_traits::is_variadic_function == false);
+		static_assert(functor_traits::is_variadic == false);
 	}(functor{});
 
 	[](auto&& fn) {
@@ -78,7 +78,7 @@ void reference()
 		static_assert(functor_traits::arity == 0);
 		static_assert(std::is_same_v<typename functor_traits::class_type, functor>);
 		static_assert(functor_traits::is_member_function == false);
-		static_assert(functor_traits::is_variadic_function == false);
+		static_assert(functor_traits::is_variadic == false);
 	}(functor{});
 }
 
@@ -93,7 +93,7 @@ void signature()
 		static_assert(std::is_same_v<void_void_callable_traits::result_type, void>);
 		static_assert(void_void_callable_traits::arity == 0);
 		static_assert(void_void_callable_traits::is_member_function == false);
-		static_assert(void_void_callable_traits::is_variadic_function == false);
+		static_assert(void_void_callable_traits::is_variadic == false);
 	}
 
 	{
@@ -103,7 +103,7 @@ void signature()
 		static_assert(std::is_same_v<int_to_int_callable_traits::arg0_type, int>);
 		static_assert(std::is_same_v<int_to_int_callable_traits::arg_type<0>, int>);
 		static_assert(int_to_int_callable_traits::is_member_function == false);
-		static_assert(int_to_int_callable_traits::is_variadic_function == false);
+		static_assert(int_to_int_callable_traits::is_variadic == false);
 	}
 }
 
@@ -120,7 +120,7 @@ void lambda_qualifiers()
 		static_assert(const_lambda_traits::arity == 0);
 		static_assert(std::is_same_v<std::add_const_t<const_lambda_traits::class_type>, decltype(const_lambda)>);
 		static_assert(const_lambda_traits::is_member_function == false);
-		static_assert(const_lambda_traits::is_variadic_function == false);
+		static_assert(const_lambda_traits::is_variadic == false);
 	}
 
 	{
@@ -131,7 +131,7 @@ void lambda_qualifiers()
 		static_assert(
 		    std::is_same_v<std::add_volatile_t<volatile_lambda_traits::class_type>, decltype(volatile_lambda)>);
 		static_assert(volatile_lambda_traits::is_member_function == false);
-		static_assert(volatile_lambda_traits::is_variadic_function == false);
+		static_assert(volatile_lambda_traits::is_variadic == false);
 	}
 
 	{
@@ -141,7 +141,7 @@ void lambda_qualifiers()
 		static_assert(lambda_traits::arity == 0);
 		static_assert(std::is_same_v<lambda_traits::class_type, decltype(lambda)>);
 		static_assert(lambda_traits::is_member_function == false);
-		static_assert(lambda_traits::is_variadic_function == false);
+		static_assert(lambda_traits::is_variadic == false);
 	}
 
 	{
@@ -151,7 +151,7 @@ void lambda_qualifiers()
 		static_assert(mutable_lambda_traits::arity == 0);
 		static_assert(std::is_same_v<mutable_lambda_traits::class_type, decltype(mutable_lambda)>);
 		static_assert(mutable_lambda_traits::is_member_function == false);
-		static_assert(mutable_lambda_traits::is_variadic_function == false);
+		static_assert(mutable_lambda_traits::is_variadic == false);
 	}
 
 	auto lambda = []() {};
@@ -162,7 +162,7 @@ void lambda_qualifiers()
 		static_assert(
 		    std::is_same_v<std::add_lvalue_reference_t<typename ref_lambda_traits::class_type>, decltype(ref_lambda)>);
 		static_assert(ref_lambda_traits::is_member_function == false);
-		static_assert(ref_lambda_traits::is_variadic_function == false);
+		static_assert(ref_lambda_traits::is_variadic == false);
 	}(lambda);
 
 	[](const auto& const_ref_lambda) {
@@ -173,7 +173,7 @@ void lambda_qualifiers()
 		    std::is_same_v<std::add_lvalue_reference_t<std::add_const_t<typename const_ref_lambda_traits::class_type>>,
 		                   decltype(const_ref_lambda)>);
 		static_assert(const_ref_lambda_traits::is_member_function == false);
-		static_assert(const_ref_lambda_traits::is_variadic_function == false);
+		static_assert(const_ref_lambda_traits::is_variadic == false);
 	}([]() {});
 
 	[](auto&& rvalue_ref_lambda) {
@@ -183,7 +183,7 @@ void lambda_qualifiers()
 		static_assert(std::is_same_v<std::add_rvalue_reference_t<typename rvalue_ref_lambda_traits::class_type>,
 		                             decltype(rvalue_ref_lambda)>);
 		static_assert(rvalue_ref_lambda_traits::is_member_function == false);
-		static_assert(rvalue_ref_lambda_traits::is_variadic_function == false);
+		static_assert(rvalue_ref_lambda_traits::is_variadic == false);
 	}([]() {});
 }
 
@@ -195,7 +195,7 @@ void arguments_and_return_types()
 		static_assert(std::is_same_v<void_to_int_lambda_traits::result_type, int>);
 		static_assert(void_to_int_lambda_traits::arity == 0);
 		static_assert(void_to_int_lambda_traits::is_member_function == false);
-		static_assert(void_to_int_lambda_traits::is_variadic_function == false);
+		static_assert(void_to_int_lambda_traits::is_variadic == false);
 	}
 
 	{
@@ -206,7 +206,7 @@ void arguments_and_return_types()
 		static_assert(std::is_same_v<int_to_void_lambda_traits::arg0_type, int>);
 		static_assert(std::is_same_v<int_to_void_lambda_traits::arg_type<0>, int>);
 		static_assert(int_to_void_lambda_traits::is_member_function == false);
-		static_assert(int_to_void_lambda_traits::is_variadic_function == false);
+		static_assert(int_to_void_lambda_traits::is_variadic == false);
 	}
 
 	{
@@ -217,7 +217,7 @@ void arguments_and_return_types()
 		static_assert(std::is_same_v<int_to_int_lambda_traits::arg0_type, int>);
 		static_assert(std::is_same_v<int_to_int_lambda_traits::arg_type<0>, int>);
 		static_assert(int_to_int_lambda_traits::is_member_function == false);
-		static_assert(int_to_int_lambda_traits::is_variadic_function == false);
+		static_assert(int_to_int_lambda_traits::is_variadic == false);
 	}
 
 	{
@@ -230,7 +230,7 @@ void arguments_and_return_types()
 		static_assert(std::is_same_v<two_arg_lambda_traits::arg_type<0>, int>);
 		static_assert(std::is_same_v<two_arg_lambda_traits::arg_type<1>, float*>);
 		static_assert(two_arg_lambda_traits::is_member_function == false);
-		static_assert(two_arg_lambda_traits::is_variadic_function == false);
+		static_assert(two_arg_lambda_traits::is_variadic == false);
 	}
 
 	{
@@ -248,7 +248,7 @@ void arguments_and_return_types()
 		static_assert(std::is_same_v<three_arg_lambda_traits::arg_type<1>, const float*>);
 		static_assert(std::is_same_v<three_arg_lambda_traits::arg_type<2>, volatile char*>);
 		static_assert(three_arg_lambda_traits::is_member_function == false);
-		static_assert(three_arg_lambda_traits::is_variadic_function == false);
+		static_assert(three_arg_lambda_traits::is_variadic == false);
 	}
 
 	{
@@ -267,7 +267,7 @@ void arguments_and_return_types()
 		static_assert(std::is_same_v<four_arg_lambda_traits::arg_type<2>, char&&>);
 		static_assert(std::is_same_v<four_arg_lambda_traits::arg_type<3>, std::string>);
 		static_assert(four_arg_lambda_traits::is_member_function == false);
-		static_assert(four_arg_lambda_traits::is_variadic_function == false);
+		static_assert(four_arg_lambda_traits::is_variadic == false);
 	}
 }
 
@@ -285,7 +285,7 @@ void test()
 		static_assert(std::is_same_v<lambda_with_value_capture_traits::result_type, void>);
 		static_assert(lambda_with_value_capture_traits::arity == 0);
 		static_assert(lambda_with_value_capture_traits::is_member_function == false);
-		static_assert(lambda_with_value_capture_traits::is_variadic_function == false);
+		static_assert(lambda_with_value_capture_traits::is_variadic == false);
 	}
 
 	{
@@ -294,7 +294,7 @@ void test()
 		static_assert(std::is_same_v<lambda_with_implicit_value_capture_traits::result_type, void>);
 		static_assert(lambda_with_implicit_value_capture_traits::arity == 0);
 		static_assert(lambda_with_implicit_value_capture_traits::is_member_function == false);
-		static_assert(lambda_with_implicit_value_capture_traits::is_variadic_function == false);
+		static_assert(lambda_with_implicit_value_capture_traits::is_variadic == false);
 	}
 
 	{
@@ -303,7 +303,7 @@ void test()
 		static_assert(std::is_same_v<lambda_with_mutable_value_capture_traits::result_type, void>);
 		static_assert(lambda_with_mutable_value_capture_traits::arity == 0);
 		static_assert(lambda_with_mutable_value_capture_traits::is_member_function == false);
-		static_assert(lambda_with_mutable_value_capture_traits::is_variadic_function == false);
+		static_assert(lambda_with_mutable_value_capture_traits::is_variadic == false);
 	}
 
 	{
@@ -312,7 +312,7 @@ void test()
 		static_assert(std::is_same_v<lambda_with_ref_capture_traits::result_type, void>);
 		static_assert(lambda_with_ref_capture_traits::arity == 0);
 		static_assert(lambda_with_ref_capture_traits::is_member_function == false);
-		static_assert(lambda_with_ref_capture_traits::is_variadic_function == false);
+		static_assert(lambda_with_ref_capture_traits::is_variadic == false);
 	}
 
 	{
@@ -321,7 +321,7 @@ void test()
 		static_assert(std::is_same_v<lambda_with_implicit_ref_capture_traits::result_type, void>);
 		static_assert(lambda_with_implicit_ref_capture_traits::arity == 0);
 		static_assert(lambda_with_implicit_ref_capture_traits::is_member_function == false);
-		static_assert(lambda_with_implicit_ref_capture_traits::is_variadic_function == false);
+		static_assert(lambda_with_implicit_ref_capture_traits::is_variadic == false);
 	}
 
 	{
@@ -334,14 +334,14 @@ void test()
 				static_assert(std::is_same_v<lambda_with_this_ref_capture_traits::result_type, void>);
 				static_assert(lambda_with_this_ref_capture_traits::arity == 0);
 				static_assert(lambda_with_this_ref_capture_traits::is_member_function == false);
-				static_assert(lambda_with_this_ref_capture_traits::is_variadic_function == false);
+				static_assert(lambda_with_this_ref_capture_traits::is_variadic == false);
 
 				const auto lambda_with_this_value_capture = [*this]() { static_cast<void>(value); };
 				using lambda_with_this_value_capture_traits = callable_traits<decltype(lambda_with_this_value_capture)>;
 				static_assert(std::is_same_v<lambda_with_this_value_capture_traits::result_type, void>);
 				static_assert(lambda_with_this_value_capture_traits::arity == 0);
 				static_assert(lambda_with_this_value_capture_traits::is_member_function == false);
-				static_assert(lambda_with_this_value_capture_traits::is_variadic_function == false);
+				static_assert(lambda_with_this_value_capture_traits::is_variadic == false);
 			}
 			void c() const
 			{
@@ -350,14 +350,14 @@ void test()
 				static_assert(std::is_same_v<lambda_with_this_ref_capture_traits::result_type, void>);
 				static_assert(lambda_with_this_ref_capture_traits::arity == 0);
 				static_assert(lambda_with_this_ref_capture_traits::is_member_function == false);
-				static_assert(lambda_with_this_ref_capture_traits::is_variadic_function == false);
+				static_assert(lambda_with_this_ref_capture_traits::is_variadic == false);
 
 				const auto lambda_with_this_value_capture = [*this]() { static_cast<void>(value); };
 				using lambda_with_this_value_capture_traits = callable_traits<decltype(lambda_with_this_value_capture)>;
 				static_assert(std::is_same_v<lambda_with_this_value_capture_traits::result_type, void>);
 				static_assert(lambda_with_this_value_capture_traits::arity == 0);
 				static_assert(lambda_with_this_value_capture_traits::is_member_function == false);
-				static_assert(lambda_with_this_value_capture_traits::is_variadic_function == false);
+				static_assert(lambda_with_this_value_capture_traits::is_variadic == false);
 			}
 		} foo;
 		foo.f();
@@ -389,7 +389,7 @@ void function_type()
 		static_assert(std::is_same_v<void_to_void_fn_traits::result_type, void>);
 		static_assert(void_to_void_fn_traits::arity == 0);
 		static_assert(void_to_void_fn_traits::is_member_function == false);
-		static_assert(void_to_void_fn_traits::is_variadic_function == false);
+		static_assert(void_to_void_fn_traits::is_variadic == false);
 	}
 
 	{
@@ -399,7 +399,7 @@ void function_type()
 		static_assert(std::is_same_v<int_to_void_fn_traits::arg0_type, int>);
 		static_assert(std::is_same_v<int_to_void_fn_traits::arg_type<0>, int>);
 		static_assert(int_to_void_fn_traits::is_member_function == false);
-		static_assert(int_to_void_fn_traits::is_variadic_function == false);
+		static_assert(int_to_void_fn_traits::is_variadic == false);
 	}
 
 	{
@@ -409,7 +409,7 @@ void function_type()
 		static_assert(std::is_same_v<int_to_int_fn_traits::arg0_type, int>);
 		static_assert(std::is_same_v<int_to_int_fn_traits::arg_type<0>, int>);
 		static_assert(int_to_int_fn_traits::is_member_function == false);
-		static_assert(int_to_int_fn_traits::is_variadic_function == false);
+		static_assert(int_to_int_fn_traits::is_variadic == false);
 	}
 
 	{
@@ -417,7 +417,7 @@ void function_type()
 		static_assert(std::is_same_v<noexcept_fn_traits::result_type, void>);
 		static_assert(noexcept_fn_traits::arity == 0);
 		static_assert(noexcept_fn_traits::is_member_function == false);
-		static_assert(noexcept_fn_traits::is_variadic_function == false);
+		static_assert(noexcept_fn_traits::is_variadic == false);
 	}
 
 	{
@@ -425,7 +425,7 @@ void function_type()
 		static_assert(std::is_same_v<var_arg0_fn_traits::result_type, void>);
 		static_assert(var_arg0_fn_traits::arity == 0);
 		static_assert(var_arg0_fn_traits::is_member_function == false);
-		static_assert(var_arg0_fn_traits::is_variadic_function == true);
+		static_assert(var_arg0_fn_traits::is_variadic == true);
 	}
 
 	{
@@ -435,7 +435,7 @@ void function_type()
 		static_assert(std::is_same_v<var_arg1_fn_traits::arg0_type, int>);
 		static_assert(std::is_same_v<var_arg1_fn_traits::arg_type<0>, int>);
 		static_assert(var_arg1_fn_traits::is_member_function == false);
-		static_assert(var_arg1_fn_traits::is_variadic_function == true);
+		static_assert(var_arg1_fn_traits::is_variadic == true);
 	}
 }
 
@@ -447,7 +447,7 @@ void function_pointer_type()
 		static_assert(std::is_same_v<void_to_void_fn_ptr_traits::result_type, void>);
 		static_assert(void_to_void_fn_ptr_traits::arity == 0);
 		static_assert(void_to_void_fn_ptr_traits::is_member_function == false);
-		static_assert(void_to_void_fn_ptr_traits::is_variadic_function == false);
+		static_assert(void_to_void_fn_ptr_traits::is_variadic == false);
 	}
 
 	{
@@ -458,7 +458,7 @@ void function_pointer_type()
 		static_assert(std::is_same_v<int_to_void_fn_ptr_traits::arg0_type, int>);
 		static_assert(std::is_same_v<int_to_void_fn_ptr_traits::arg_type<0>, int>);
 		static_assert(int_to_void_fn_ptr_traits::is_member_function == false);
-		static_assert(int_to_void_fn_ptr_traits::is_variadic_function == false);
+		static_assert(int_to_void_fn_ptr_traits::is_variadic == false);
 	}
 
 	{
@@ -469,7 +469,7 @@ void function_pointer_type()
 		static_assert(std::is_same_v<int_to_int_fn_ptr_traits::arg0_type, int>);
 		static_assert(std::is_same_v<int_to_int_fn_ptr_traits::arg_type<0>, int>);
 		static_assert(int_to_int_fn_ptr_traits::is_member_function == false);
-		static_assert(int_to_int_fn_ptr_traits::is_variadic_function == false);
+		static_assert(int_to_int_fn_ptr_traits::is_variadic == false);
 	}
 
 	{
@@ -478,7 +478,7 @@ void function_pointer_type()
 		static_assert(std::is_same_v<var_arg0_fn_ptr_traits::result_type, void>);
 		static_assert(var_arg0_fn_ptr_traits::arity == 0);
 		static_assert(var_arg0_fn_ptr_traits::is_member_function == false);
-		static_assert(var_arg0_fn_ptr_traits::is_variadic_function == true);
+		static_assert(var_arg0_fn_ptr_traits::is_variadic == true);
 	}
 
 	{
@@ -489,7 +489,7 @@ void function_pointer_type()
 		static_assert(std::is_same_v<var_arg1_fn_ptr_traits::arg0_type, int>);
 		static_assert(std::is_same_v<var_arg1_fn_ptr_traits::arg_type<0>, int>);
 		static_assert(var_arg1_fn_ptr_traits::is_member_function == false);
-		static_assert(var_arg1_fn_ptr_traits::is_variadic_function == true);
+		static_assert(var_arg1_fn_ptr_traits::is_variadic == true);
 	}
 }
 
@@ -512,7 +512,7 @@ void member_function_type()
 		static_assert(std::is_same_v<void_to_void_mem_fn_traits::class_type, type>);
 		static_assert(void_to_void_mem_fn_traits::arity == 0);
 		static_assert(void_to_void_mem_fn_traits::is_member_function == true);
-		static_assert(void_to_void_mem_fn_traits::is_variadic_function == false);
+		static_assert(void_to_void_mem_fn_traits::is_variadic == false);
 	}
 
 	{
@@ -521,7 +521,7 @@ void member_function_type()
 		static_assert(std::is_same_v<void_to_int_mem_fn_traits::class_type, type>);
 		static_assert(void_to_int_mem_fn_traits::arity == 0);
 		static_assert(void_to_int_mem_fn_traits::is_member_function == true);
-		static_assert(void_to_int_mem_fn_traits::is_variadic_function == false);
+		static_assert(void_to_int_mem_fn_traits::is_variadic == false);
 	}
 
 	{
@@ -532,7 +532,7 @@ void member_function_type()
 		static_assert(std::is_same_v<int_to_int_mem_fn_traits::arg0_type, int>);
 		static_assert(std::is_same_v<int_to_int_mem_fn_traits::arg_type<0>, int>);
 		static_assert(int_to_int_mem_fn_traits::is_member_function == true);
-		static_assert(int_to_int_mem_fn_traits::is_variadic_function == false);
+		static_assert(int_to_int_mem_fn_traits::is_variadic == false);
 	}
 
 	{
@@ -541,7 +541,7 @@ void member_function_type()
 		static_assert(std::is_same_v<var_arg0_to_void_mem_fn_traits::class_type, type>);
 		static_assert(var_arg0_to_void_mem_fn_traits::arity == 0);
 		static_assert(var_arg0_to_void_mem_fn_traits::is_member_function == true);
-		static_assert(var_arg0_to_void_mem_fn_traits::is_variadic_function == true);
+		static_assert(var_arg0_to_void_mem_fn_traits::is_variadic == true);
 	}
 }
 
@@ -656,7 +656,7 @@ void specifier()
 		    static_assert(std::is_same_v<typename fn_traits::class_type, specifiers>);
 		    static_assert(fn_traits::arity == 0);
 		    static_assert(fn_traits::is_member_function == true);
-		    static_assert(fn_traits::is_variadic_function == false);
+		    static_assert(fn_traits::is_variadic == false);
 	    },
 	    all_mem_fn_specifier);
 
@@ -667,7 +667,7 @@ void specifier()
 		    static_assert(std::is_same_v<typename fn_traits::class_type, specifiers>);
 		    static_assert(fn_traits::arity == 0);
 		    static_assert(fn_traits::is_member_function == true);
-		    static_assert(fn_traits::is_variadic_function == true);
+		    static_assert(fn_traits::is_variadic == true);
 	    },
 	    all_var_arg_mem_fn_specifier);
 }
@@ -690,7 +690,7 @@ void inheritance_specifier()
 		static_assert(std::is_same_v<pure_virtual_mem_fn_traits::class_type, base>);
 		static_assert(pure_virtual_mem_fn_traits::arity == 0);
 		static_assert(pure_virtual_mem_fn_traits::is_member_function == true);
-		static_assert(pure_virtual_mem_fn_traits::is_variadic_function == false);
+		static_assert(pure_virtual_mem_fn_traits::is_variadic == false);
 	}
 
 	{
@@ -699,7 +699,7 @@ void inheritance_specifier()
 		static_assert(std::is_same_v<virtual_mem_fn_traits::class_type, base>);
 		static_assert(virtual_mem_fn_traits::arity == 0);
 		static_assert(virtual_mem_fn_traits::is_member_function == true);
-		static_assert(virtual_mem_fn_traits::is_variadic_function == false);
+		static_assert(virtual_mem_fn_traits::is_variadic == false);
 	}
 
 	{
@@ -708,7 +708,7 @@ void inheritance_specifier()
 		static_assert(std::is_same_v<inherited_pure_virtual_mem_fn_traits::class_type, inherited>);
 		static_assert(inherited_pure_virtual_mem_fn_traits::arity == 0);
 		static_assert(inherited_pure_virtual_mem_fn_traits::is_member_function == true);
-		static_assert(inherited_pure_virtual_mem_fn_traits::is_variadic_function == false);
+		static_assert(inherited_pure_virtual_mem_fn_traits::is_variadic == false);
 	}
 
 	{
@@ -717,7 +717,7 @@ void inheritance_specifier()
 		static_assert(std::is_same_v<inherited_virtual_mem_fn_traits::class_type, inherited>);
 		static_assert(inherited_virtual_mem_fn_traits::arity == 0);
 		static_assert(inherited_virtual_mem_fn_traits::is_member_function == true);
-		static_assert(inherited_virtual_mem_fn_traits::is_variadic_function == false);
+		static_assert(inherited_virtual_mem_fn_traits::is_variadic == false);
 	}
 }
 
