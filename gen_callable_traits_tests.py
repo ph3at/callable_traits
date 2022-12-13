@@ -174,6 +174,22 @@ def cyclic_zip(*iterables):
     return zip(*elements)
 
 
+def make_function_type(function_name: str, qualifiers: tuple[Optional[Qualifier], Optional[Pointer], Optional[Reference]]):
+    def qualify_type(base_type: str, qualifier: Optional[Qualifier]):
+        qualified_type = f'std::add_const_t<{base_type}>' if qualifier == Qualifier.CONST else base_type
+        qualified_type = f'std::add_volatile_t<{qualified_type}>' if qualifier == Qualifier.VOLATILE else qualified_type
+        qualified_type = f'std::add_cv_t<{qualified_type}>' if qualifier == Qualifier.CONST_VOLATILE else qualified_type
+        return qualified_type
+
+    q, p, r = qualifiers
+    fn_type = f'decltype({function_name})'
+    fn_type = qualify_type(fn_type, q)
+    fn_type = qualify_type(
+        f'std::add_pointer_t<{fn_type}>', p.qualifier) if p else fn_type
+    fn_type = f'std::add_lvalue_reference_t<{fn_type}>' if r == Reference.LVALUE_REFERENCE else f'std::add_rvalue_reference_t<{fn_type}>' if r == Reference.RVALUE_REFERENCE else fn_type
+    return fn_type
+
+
 def is_pointer_type(full_type: FullType) -> bool:
     return True if full_type.pointer else False
 
@@ -244,28 +260,42 @@ def gen_lambda_functions(return_types: list[FullType], parameters: list[list[Ful
     return functions
 
 
-def gen_function_tests(functions: list[Function]) -> list[list[StaticAssert]]:
+def gen_function_tests(functions: list[Function], function_types: list[tuple[Optional[Qualifier], Optional[Pointer], Optional[Reference]]]) -> list[list[StaticAssert]]:
+    trait_idx = 0
+
+    def traits(fn: Function):
+        nonlocal trait_idx
+        fn_type = make_function_type(fn.name, function_types[trait_idx])
+        trait_idx = (trait_idx + 1) % len(function_types)
+        return f'callable_traits<{fn_type}>'
+
     tests = []
     for fn in functions:
-        traits = f'callable_traits<decltype({fn.name})>'
         fn_tests = []
         fn_tests += [StaticAssert(
-            f'std::is_same_v<{traits}::result_type, {str(fn.return_type)}>')]
+            f'std::is_same_v<{traits(fn)}::result_type, {str(fn.return_type)}>')]
         for idx in range(0, 4):
             fn_tests += [StaticAssert(
-                f'helper::has_arg{idx}_type_v<{traits}> == {"true" if len(fn.parameters) > idx and idx < 3 else "false"}')]
+                f'helper::has_arg{idx}_type_v<{traits(fn)}> == {"true" if len(fn.parameters) > idx and idx < 3 else "false"}')]
         for idx, parameter in enumerate(fn.parameters):
             if idx < 3:
                 fn_tests += [StaticAssert(
-                    f'std::is_same_v<{traits}::arg{idx}_type, {str(parameter)}>')]
+                    f'std::is_same_v<{traits(fn)}::arg{idx}_type, {str(parameter)}>')]
             fn_tests += [StaticAssert(
-                f'std::is_same_v<{traits}::arg_type<{idx}>, {str(parameter)}>')]
-        fn_tests += [StaticAssert(f'{traits}::arity == {len(fn.parameters)}')]
-        fn_tests += [StaticAssert(f'{traits}::is_member_function == false')]
+                f'std::is_same_v<{traits(fn)}::arg_type<{idx}>, {str(parameter)}>')]
+        fn_tests += [StaticAssert(f'{traits(fn)}::arity == {len(fn.parameters)}')]
+        fn_tests += [StaticAssert(f'{traits(fn)}::is_functor == false')]
+        fn_tests += [StaticAssert(f'{traits(fn)}::is_member_function == false')]
         fn_tests += [StaticAssert(
-            f'{traits}::is_variadic == {"true" if fn.is_variadic else "false"}')]
+            f'{traits(fn)}::is_variadic == {"true" if fn.is_variadic else "false"}')]
         fn_tests += [StaticAssert(
-            f'helper::has_class_type_v<{traits}> == false')]
+            f'{traits(fn)}::is_noexcept == {"true" if fn.specifier == Specifier.NOEXCEPT else "false"}')]
+        fn_tests += [StaticAssert(f'{traits(fn)}::is_const == false')]
+        fn_tests += [StaticAssert(f'{traits(fn)}::is_volatile == false')]
+        fn_tests += [StaticAssert(f'{traits(fn)}::is_lvalue_reference == false')]
+        fn_tests += [StaticAssert(f'{traits(fn)}::is_rvalue_reference == false')]
+        fn_tests += [StaticAssert(
+            f'helper::has_class_type_v<{traits(fn)}> == false')]
         tests += [fn_tests]
     return tests
 
@@ -287,9 +317,18 @@ def gen_member_function_tests(functions: list[MemberFunction]) -> list[list[Stat
             fn_tests += [StaticAssert(
                 f'std::is_same_v<{traits}::arg_type<{idx}>, {str(parameter)}>')]
         fn_tests += [StaticAssert(f'{traits}::arity == {len(fn.parameters)}')]
+        fn_tests += [StaticAssert(f'{traits}::is_functor == false')]
         fn_tests += [StaticAssert(f'{traits}::is_member_function == true')]
         fn_tests += [StaticAssert(
             f'{traits}::is_variadic == {"true" if fn.is_variadic else "false"}')]
+        fn_tests += [StaticAssert(
+            f'{traits}::is_noexcept == {"true" if fn.member_specifier.specifier == Specifier.NOEXCEPT else "false"}')]
+        fn_tests += [StaticAssert(f'{traits}::is_const == {"true" if fn.member_specifier.qualifier == Qualifier.CONST or fn.member_specifier.qualifier == Qualifier.CONST_VOLATILE else "false"}')]
+        fn_tests += [StaticAssert(f'{traits}::is_volatile == {"true" if fn.member_specifier.qualifier == Qualifier.VOLATILE or fn.member_specifier.qualifier == Qualifier.CONST_VOLATILE else "false"}')]
+        fn_tests += [StaticAssert(
+            f'{traits}::is_lvalue_reference == {"true" if fn.member_specifier.reference == Reference.LVALUE_REFERENCE else "false"}')]
+        fn_tests += [StaticAssert(
+            f'{traits}::is_rvalue_reference == {"true" if fn.member_specifier.reference == Reference.RVALUE_REFERENCE else "false"}')]
         fn_tests += [StaticAssert(
             f'helper::has_class_type_v<{traits}> == true')]
         fn_tests += [StaticAssert(
@@ -315,9 +354,17 @@ def gen_lambda_function_tests(functions: list[LambdaFunction]) -> list[list[Stat
             fn_tests += [StaticAssert(
                 f'std::is_same_v<{traits}::arg_type<{idx}>, {str(parameter)}>')]
         fn_tests += [StaticAssert(f'{traits}::arity == {len(fn.parameters)}')]
+        fn_tests += [StaticAssert(f'{traits}::is_functor == true')]
         fn_tests += [StaticAssert(f'{traits}::is_member_function == false')]
         fn_tests += [StaticAssert(
             f'{traits}::is_variadic == {"true" if fn.is_variadic else "false"}')]
+        fn_tests += [StaticAssert(
+            f'{traits}::is_noexcept == {"true" if fn.lambda_specifier.specifier == Specifier.NOEXCEPT else "false"}')]
+        fn_tests += [StaticAssert(
+            f'{traits}::is_const == {"false" if fn.lambda_specifier.mutable == Mutable.MUTABLE else "true"}')]
+        fn_tests += [StaticAssert(f'{traits}::is_volatile == false')]
+        fn_tests += [StaticAssert(f'{traits}::is_lvalue_reference == false')]
+        fn_tests += [StaticAssert(f'{traits}::is_rvalue_reference == false')]
         fn_tests += [StaticAssert(
             f'helper::has_class_type_v<{traits}> == true')]
         fn_tests += [StaticAssert(
@@ -364,6 +411,10 @@ all_full_types = [FullType(q, t, p, r)
                   for q in all_qualifiers]
 all_return_types = [t for t in all_full_types if is_valid_return_type(t)]
 all_parameter_types = [t for t in all_full_types if is_valid_parameter_type(t)]
+all_function_types = [(q, p, r)
+                      for r in all_references
+                      for p in all_pointers
+                      for q in all_qualifiers]
 all_parameters = list(chain.from_iterable(
     [gen_function_parameters(p, all_parameter_types) for p in range(0, 5)]))
 all_specifiers = [None, Specifier.NOEXCEPT]
@@ -376,7 +427,7 @@ all_lambda_specifiers = [LambdaSpecifier(m, s)
                          for m in all_mutables]
 
 functions = gen_functions(all_return_types, all_parameters, all_specifiers)
-function_tests = gen_function_tests(functions)
+function_tests = gen_function_tests(functions, all_function_types)
 
 member_functions = gen_member_functions(
     all_return_types, all_parameters, all_member_specifiers)
