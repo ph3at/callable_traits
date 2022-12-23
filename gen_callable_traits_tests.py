@@ -381,7 +381,7 @@ def gen_function_parameters(num_parameters: int, parameters: list[FullType]) -> 
 
 def append_headers(source: str, headers: list[Header]) -> str:
     source += '\n'.join(str(h) for h in headers)
-    return source + '\n'
+    return source + '\n\n'
 
 
 def append_tests(source: str, functions: Union[list[Function], list[MemberFunction], list[LambdaFunction]], assertions: list[list[StaticAssert]]) -> str:
