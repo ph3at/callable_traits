@@ -1,0 +1,7 @@
+@PACKAGE_INIT@
+
+if(NOT TARGET callable_traits::callable_traits)
+	include(${CMAKE_CURRENT_LIST_DIR}/callable_traits-config-targets.cmake)
+endif()
+
+check_required_components(callable_traits)
